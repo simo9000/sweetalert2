@@ -143,36 +143,6 @@
     return rgb;
   };
 
-  var validators = {
-    // Email validity
-    email: function(value, input) {
-      return new Promise(function(resolve, reject) {
-        var emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
-        if (emailRegex.test(value)) {
-          resolve();
-        } else {
-          reject({
-            message: 'Invalid email address',
-            input:   input
-          });
-        }
-      });
-    },
-    // Required
-    required: function(value, input) {
-      return new Promise(function(resolve, reject) {
-        if (!value || !value.length) {
-          return reject({
-            message: 'Input required',
-            input:   input
-          });
-        }
-
-        resolve();
-      });
-    }
-  }
-
   var mediaqueryId = swalPrefix + 'mediaquery';
 
   // Remember state in cases where opening and handling a modal will fiddle with it.
@@ -407,12 +377,49 @@
     }
   };
 
-  var addInput = function(input) {
+  var validators = {
+    // Email validity
+    email: function(input) {
+      return new Promise(function(resolve, reject) {
+        var emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
+        if (emailRegex.test(input.value)) {
+          resolve();
+        } else {
+          reject({
+            message: 'Invalid email address',
+            input:   input
+          });
+        }
+      });
+    },
+    // Required
+    required: function(input) {
+      return new Promise(function(resolve, reject) {
+        if (!input.value || !input.value.length) {
+          return reject({
+            message: 'Input required',
+            input:   input
+          });
+        }
+
+        resolve();
+      });
+    }
+  }
+
+  var generateForm = function(inputs) {
     var modal = getModal();
-    var fieldSet = document.createElement('fieldset');
+    var form = modal.getElementsByTagName('form')[0];
+    // Add each input individually
+    for (var i = inputs.length - 1; i >= 0; i--) {
+      form.appendChild(addInputToForm(inputs[i]));
+    }
+  }
 
+  var formatInput = function(input) {
+    // Generate a "unique(ish)" id
     input.id = swalPrefix + '_' + input.name;
-
+    // Default the tag to input
     if (!input.tag) {
       input.tag = 'input';
     }
@@ -433,6 +440,7 @@
         if (document.getElementById(input.id)) {
           document.getElementById(input.id).value = value;
         }
+
         value = value;
       }
     });
@@ -448,6 +456,13 @@
         input.validator = validators[input.validator];
       }
     }
+    return input;
+  }
+
+  var addInputToForm = function(input) {
+    var fieldSet = document.createElement('fieldset');
+
+    formatInput(input);
 
     // Add label if present
     if (input.label) {
@@ -458,6 +473,48 @@
       fieldSet.appendChild(label);
     }
 
+    var $input;
+
+    // Input specific setup
+    switch (input.tag) {
+      case 'select':
+        $input = addSelect(input)
+        break;
+
+      case 'input':
+        switch (input.type) {
+          case 'checkbox':
+          case 'radio':
+            $input = addCheckbox(input)
+            break;
+
+          default:
+            $input = addInput(input);
+            break;
+        }
+
+      default:
+        $input = addInput(input);
+        break;
+    }
+
+
+    // Add events
+    $input.oninput = function() {
+      sweetAlert.resetValidationError();
+    };
+    $input.onkeyup = function(event) {
+      event.stopPropagation();
+      if (event.keyCode === 13) {
+        sweetAlert.clickConfirm();
+      }
+    };
+    fieldSet.appendChild($input);
+
+    return fieldSet;
+  }
+
+  var addInput = function(input) {
     var inputNode = document.createElement(input.tag);
     inputNode.id = input.id;
     inputNode.name = input.name;
@@ -469,63 +526,102 @@
 
     // Add custom attributes
     if (input.attributes) {
-      var attributes = Object.keys(input.attributes);
-      for (var i = attributes.length - 1; i >= 0; i--) {
-        var attr = input.attributes[attributes[i]];
-        if (inputNode[attributes[i]]) {
-          inputNode[attributes[i]] += attr;
-        } else {
-          inputNode[attributes[i]] = attr;
-        }
-      }
+      addAttributes(inputNode, input.attributes);
     }
 
-    // Input specific setup
-    switch (input.tag) {
-      case 'select':
-        if (input.options) {
-          var inputOptions = Object.keys(input.options);
-          if (input.attributes && input.attributes.placeholder) {
-            var option = document.createElement('option');
-            option.selected = true;
-            option.disabled = true;
-            option.innerHTML = input.attributes.placeholder;
-            
-            inputNode.appendChild(option);
-          }
-          for (var i = inputOptions.length - 1; i >= 0; i--) {
-            var option = document.createElement('option');
-            
-            option.value = inputOptions[i];
-            option.innerHTML = input.options[inputOptions[i]];
-            
-            inputNode.appendChild(option);
-          }
-        }
-        break;
-
-      case null:
-        // Silence is golden
-        break;
+    // Set the type attributes
+    if (input.tag == 'input') {
+      inputNode.type = input.type
     }
 
-    // Add events
-    inputNode.oninput = function() {
-      sweetAlert.resetValidationError();
-    };
-    inputNode.onkeyup = function(event) {
-      event.stopPropagation();
-      if (event.keyCode === 13) {
-        sweetAlert.clickConfirm();
+    return inputNode;
+  }
+
+  var addAttributes = function(input, attributes) {
+    var attributes = Object.keys(attributes);
+    for (var i = attributes.length - 1; i >= 0; i--) {
+      var attr = attributes[attributes[i]];
+      if (inputNode[attributes[i]]) {
+        inputNode[attributes[i]] += attr;
+      } else {
+        inputNode[attributes[i]] = attr;
       }
-    };
+    }
+  }
 
-    fieldSet.appendChild(inputNode);
+  var addSelect = function(input) {
+    var inputNode = addInput(input);
 
-    // Attach to form
-    modal.getElementsByTagName('form')[0].appendChild(fieldSet);
+    if (input.attributes && input.attributes.placeholder) {
+      var option = document.createElement('option');
+      option.selected = true;
+      option.disabled = true;
+      option.innerHTML = input.attributes.placeholder;
+      
+      inputNode.appendChild(option);
+    }
 
-    return input;
+    if (input.options instanceof Promise) {
+      input.options.then(function(data) {
+        addOptions(data);
+      }, function() {
+        // Handle error somehow
+      });
+    } else {
+      addOptions(inputNode, input.options);
+    }
+
+    return inputNode;
+  }
+
+  var addOptions = function(inputNode, options) {
+    var inputOptions = Object.keys(options);
+    for (var i = inputOptions.length - 1; i >= 0; i--) {
+      var option = document.createElement('option');
+
+      option.value = inputOptions[i];
+      option.innerHTML = options[inputOptions[i]];
+
+      inputNode.appendChild(option);
+    }
+  }
+
+  var addCheckbox = function(input) {
+    var inputNode = document.createElement('div');
+
+    if (input.options instanceof Promise) {
+      input.options.then(function(data) {
+        addCheckboxes(inputNode, data, input);
+      }, function() {
+        // Handle error somehow
+      });
+    } else {
+      addCheckboxes(inputNode, input.options, input);
+    }
+
+    return inputNode;
+  }
+
+  var addCheckboxes = function(inputNode, options, input) {
+    var inputOptions = Object.keys(options);
+
+    for (var i = inputOptions.length - 1; i >= 0; i--) {
+      var label = document.createElement('label');
+      label.innerHTML = options[inputOptions[i]];
+      console.log(input)
+      var checkbox = addInput({
+        tag:  'input',
+        type: input.type,
+        id:   input.id + '_' + i,
+        name: input.name,
+      })
+
+      console.log(checkbox)
+
+      label.insertBefore(checkbox, label.firstChild);
+
+      inputNode.appendChild(label);
+    }
   }
 
   var modalParams = extend({}, defaultParams);
@@ -592,15 +688,27 @@
     // Backwards compatability - let's use the new format!
     if (params.input) {
       var legacyInput = {
-          tag:         params.input,
-          name:        params.name,
+          tag: (function() {
+              if (['email', 'password', 'text', 'number', 'file', 'radio', 'checkbox'].indexOf(params.input) > -1) {
+                  return 'input';
+              }
+
+              return params.input;
+          })(),
+          name:        params.input,
           placeholder: params.inputPlaceholder,
           validator:   params.inputValidator,
+          attributes:  params.inputAttributes,
+          options:     params.inputOptions,
       };
 
       if (params.input === 'select') {
           legacyInput.options = params.inputOptions;
       }
+      if (!params.inputs || typeof params.inputs !== 'object') {
+          params.inputs = [];
+      }
+      params.inputs.push(legacyInput);
     }
 
     // Form items
@@ -609,9 +717,7 @@
       // We're doing a reverse loop, so reverse 
       // original data to retain order
       params.inputs.reverse();
-      for (var i = params.inputs.length - 1; i >= 0; i--) {
-        addInput(params.inputs[i]);
-      }
+      generateForm(params.inputs);
     }
 
     // Close button
@@ -928,7 +1034,7 @@
                   // Add any validators to an array so we can 
                   // utilise Promise.all
                   if (input.validator) {
-                    validators.push(input.validator(input.value, input));
+                    validators.push(input.validator(input));
                   }
 
                   inputValues[input.name] = input.value;

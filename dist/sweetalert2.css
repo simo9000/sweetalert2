@@ -267,7 +267,10 @@
   margin: 20px 0;
   padding: 0; }
 
-.swal2-input:not([type="file"]),
+.swal2-input[type=text],
+.swal2-input[type=email],
+.swal2-input[type=password],
+.swal2-input[type=number],
 .swal2-textarea,
 .swal2-select {
   width: 100%;
@@ -279,46 +282,77 @@
   -webkit-transition: all 0.3s;
   transition: all 0.3s;
   background: #FFF; }
-  .swal2-input:not([type="file"]).error,
+  .swal2-input[type=text].error,
+  .swal2-input[type=email].error,
+  .swal2-input[type=password].error,
+  .swal2-input[type=number].error,
   .swal2-textarea.error,
   .swal2-select.error {
     border-color: #f06e57 !important; }
-  .swal2-input:not([type="file"]):focus,
+  .swal2-input[type=text]:focus,
+  .swal2-input[type=email]:focus,
+  .swal2-input[type=password]:focus,
+  .swal2-input[type=number]:focus,
   .swal2-textarea:focus,
   .swal2-select:focus {
     outline: none;
     box-shadow: 0px 0px 3px #c4e6f5;
     border: 1px solid #b4dbed; }
-    .swal2-input:not([type="file"]):focus::-moz-placeholder,
+    .swal2-input[type=text]:focus::-moz-placeholder,
+    .swal2-input[type=email]:focus::-moz-placeholder,
+    .swal2-input[type=password]:focus::-moz-placeholder,
+    .swal2-input[type=number]:focus::-moz-placeholder,
     .swal2-textarea:focus::-moz-placeholder,
     .swal2-select:focus::-moz-placeholder {
       -webkit-transition: opacity 0.3s 0.03s ease;
       transition: opacity 0.3s 0.03s ease;
       opacity: 0.8; }
-    .swal2-input:not([type="file"]):focus:-ms-input-placeholder,
+    .swal2-input[type=text]:focus:-ms-input-placeholder,
+    .swal2-input[type=email]:focus:-ms-input-placeholder,
+    .swal2-input[type=password]:focus:-ms-input-placeholder,
+    .swal2-input[type=number]:focus:-ms-input-placeholder,
     .swal2-textarea:focus:-ms-input-placeholder,
     .swal2-select:focus:-ms-input-placeholder {
       -webkit-transition: opacity 0.3s 0.03s ease;
       transition: opacity 0.3s 0.03s ease;
       opacity: 0.8; }
-    .swal2-input:not([type="file"]):focus::-webkit-input-placeholder,
+    .swal2-input[type=text]:focus::-webkit-input-placeholder,
+    .swal2-input[type=email]:focus::-webkit-input-placeholder,
+    .swal2-input[type=password]:focus::-webkit-input-placeholder,
+    .swal2-input[type=number]:focus::-webkit-input-placeholder,
     .swal2-textarea:focus::-webkit-input-placeholder,
     .swal2-select:focus::-webkit-input-placeholder {
       -webkit-transition: opacity 0.3s 0.03s ease;
       transition: opacity 0.3s 0.03s ease;
       opacity: 0.8; }
-  .swal2-input:not([type="file"])::-moz-placeholder,
+  .swal2-input[type=text]::-moz-placeholder,
+  .swal2-input[type=email]::-moz-placeholder,
+  .swal2-input[type=password]::-moz-placeholder,
+  .swal2-input[type=number]::-moz-placeholder,
   .swal2-textarea::-moz-placeholder,
   .swal2-select::-moz-placeholder {
     color: #bdbdbd; }
-  .swal2-input:not([type="file"]):-ms-input-placeholder,
+  .swal2-input[type=text]:-ms-input-placeholder,
+  .swal2-input[type=email]:-ms-input-placeholder,
+  .swal2-input[type=password]:-ms-input-placeholder,
+  .swal2-input[type=number]:-ms-input-placeholder,
   .swal2-textarea:-ms-input-placeholder,
   .swal2-select:-ms-input-placeholder {
     color: #bdbdbd; }
-  .swal2-input:not([type="file"])::-webkit-input-placeholder,
+  .swal2-input[type=text]::-webkit-input-placeholder,
+  .swal2-input[type=email]::-webkit-input-placeholder,
+  .swal2-input[type=password]::-webkit-input-placeholder,
+  .swal2-input[type=number]::-webkit-input-placeholder,
   .swal2-textarea::-webkit-input-placeholder,
   .swal2-select::-webkit-input-placeholder {
     color: #bdbdbd; }
+  .swal2-input[type=text][disabled],
+  .swal2-input[type=email][disabled],
+  .swal2-input[type=password][disabled],
+  .swal2-input[type=number][disabled],
+  .swal2-textarea[disabled],
+  .swal2-select[disabled] {
+    background-color: #f9f9f9; }
 
 .swal2-input:not([type="file"]),
 .swal2-select {
