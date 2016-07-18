@@ -144,11 +144,11 @@
   };
 
   var validators = {
-    email: function(email, input) {
-      console.log(email)
+    // Email validity
+    email: function(value, input) {
       return new Promise(function(resolve, reject) {
         var emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
-        if (emailRegex.test(email)) {
+        if (emailRegex.test(value)) {
           resolve();
         } else {
           reject({
@@ -156,6 +156,19 @@
             input:   input
           });
         }
+      });
+    },
+    // Required
+    required: function(value, input) {
+      return new Promise(function(resolve, reject) {
+        if (!value || !value.length) {
+          return reject({
+            message: 'Input required',
+            input:   input
+          });
+        }
+
+        resolve();
       });
     }
   }
@@ -426,6 +439,10 @@
       if (validators[input.type]) {
         input.validator = validators[input.type];
       }
+    } else if (typeof input.validator == 'string') {
+      if (validators[input.validator]) {
+        input.validator = validators[input.validator];
+      }
     }
 
     // Add label if present
@@ -568,10 +585,26 @@
     } else {
       hide($content);
     }
+    // Backwards compatability - let's use the new format!
+    if (params.input) {
+      var legacyInput = {
+          tag:         params.input,
+          name:        params.name,
+          placeholder: params.inputPlaceholder,
+          validator:   params.inputValidator,
+      };
+
+      if (params.input === 'select') {
+          legacyInput.options = params.inputOptions;
+      }
+    }
 
     // Form items
     modal.getElementsByTagName('form')[0].innerHTML = '';
     if (params.inputs) {
+      // We're doing a reverse loop, so reverse 
+      // original data to retain order
+      params.inputs.reverse();
       for (var i = params.inputs.length - 1; i >= 0; i--) {
         addInput(params.inputs[i]);
       }
@@ -904,7 +937,7 @@
                     }, function(error) {
                       sweetAlert$1.enableInput();
                       if (error) {
-                        sweetAlert$1.showValidationError(error.message, input);
+                        sweetAlert$1.showValidationError(error.message, error.input);
                       }
                     });
                 }
