@@ -80,6 +80,7 @@ var defaultParams = {
   inputValidator: null,
   onOpen: null,
   onClose: null,
+  inputs: null
 };
 
 var sweetHTML = '<div class="' + swalClasses.overlay + '" tabIndex="-1"></div>' +
@@ -97,13 +98,7 @@ var sweetHTML = '<div class="' + swalClasses.overlay + '" tabIndex="-1"></div>' 
     '<img class="' + swalClasses.image + '">' +
     '<h2></h2>' +
     '<div class="' + swalClasses.content + '"></div>' +
-    '<input class="' + swalClasses.input + '">' +
-    '<select class="' + swalClasses.select + '"></select>' +
-    '<div class="' + swalClasses.radio + '"></div>' +
-    '<label for="' + swalClasses.checkbox + '" class="' + swalClasses.checkbox + '">' +
-      '<input type="checkbox" id="' + swalClasses.checkbox + '">' +
-    '</label>' +
-    '<textarea class="' + swalClasses.textarea + '"></textarea>' +
+    '<form></form>' +
     '<div class="' + swalClasses.validationerror + '"></div>' +
     '<hr class="' + swalClasses.spacer + '">' +
     '<button class="' + swalClasses.confirm + '">OK</button>' +
@@ -143,6 +138,23 @@ var colorLuminance = function(hex, lum) {
 
   return rgb;
 };
+
+var validators = {
+  email: function(email, input) {
+    console.log(email)
+    return new Promise(function(resolve, reject) {
+      var emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
+      if (emailRegex.test(email)) {
+        resolve();
+      } else {
+        reject({
+          message: 'Invalid email address',
+          input:   input
+        });
+      }
+    });
+  }
+}
 
 var mediaqueryId = swalPrefix + 'mediaquery';
 
@@ -374,6 +386,123 @@ var resetPrevState = function() {
   }
 };
 
+var addInput = function(input) {
+  var modal = getModal();
+  var fieldSet = document.createElement('fieldset');
+
+  input.id = swalPrefix + '_' + input.name;
+
+  if (!input.tag) {
+    input.tag = 'input';
+  }
+
+  // Input value getters and setters
+  var defaultValue = input.value;
+  delete input.value;
+
+  Object.defineProperty(input, 'value', {
+    get: function() {
+      if (!document.getElementById(input.id)) {
+        return null;
+      }
+
+      return document.getElementById(input.id).value;
+    },
+    set: function(value) {
+      if (document.getElementById(input.id)) {
+        document.getElementById(input.id).value = value;
+      }
+      value = value;
+    }
+  });
+  input.value = defaultValue;
+
+  // Provide default validators
+  if (typeof input.validator == 'undefined') {
+    if (validators[input.type]) {
+      input.validator = validators[input.type];
+    }
+  }
+
+  // Add label if present
+  if (input.label) {
+    var label = document.createElement('label');
+    label.for = input.id;
+    label.innerHTML = input.label;
+
+    fieldSet.appendChild(label);
+  }
+
+  var inputNode = document.createElement(input.tag);
+  inputNode.id = input.id;
+  inputNode.name = input.name;
+
+  // Add base class
+  if (swalClasses[input.tag]) {
+    inputNode.className = swalClasses[input.tag];
+  }
+
+  // Add custom attributes
+  if (input.attributes) {
+    var attributes = Object.keys(input.attributes);
+    for (var i = attributes.length - 1; i >= 0; i--) {
+      var attr = input.attributes[attributes[i]];
+      if (inputNode[attributes[i]]) {
+        inputNode[attributes[i]] += attr;
+      } else {
+        inputNode[attributes[i]] = attr;
+      }
+    }
+  }
+
+  // Input specific setup
+  switch (input.tag) {
+    case 'select':
+      if (input.options) {
+        var inputOptions = Object.keys(input.options);
+        if (input.attributes && input.attributes.placeholder) {
+          var option = document.createElement('option');
+          option.selected = true;
+          option.disabled = true;
+          option.innerHTML = input.attributes.placeholder;
+          
+          inputNode.appendChild(option);
+        }
+        for (var i = inputOptions.length - 1; i >= 0; i--) {
+          var option = document.createElement('option');
+          
+          option.value = inputOptions[i];
+          option.innerHTML = input.options[inputOptions[i]];
+          
+          inputNode.appendChild(option);
+        }
+      }
+      break;
+
+    case null:
+      // Silence is golden
+      break;
+  }
+
+  // Add events
+  inputNode.oninput = function() {
+    sweetAlert.resetValidationError();
+  };
+  inputNode.onkeyup = function(event) {
+    event.stopPropagation();
+    if (event.keyCode === 13) {
+      sweetAlert.clickConfirm();
+    }
+  };
+
+  fieldSet.appendChild(inputNode);
+
+  // Attach to form
+  modal.getElementsByTagName('form')[0].appendChild(fieldSet);
+
+  return input;
+}
+
 var modalParams = extend({}, defaultParams);
 
 /*
@@ -434,6 +563,14 @@ var setParameters = function(params) {
     show($content);
   } else {
     hide($content);
+  }
+
+  // Form items
+  modal.getElementsByTagName('form')[0].innerHTML = '';
+  if (params.inputs) {
+    for (var i = params.inputs.length - 1; i >= 0; i--) {
+      addInput(params.inputs[i]);
+    }
   }
 
   // Close button
@@ -615,19 +752,6 @@ function modalDependant() {
       extend(params, arguments[0]);
       params.extraParams = arguments[0].extraParams;
 
-      if (params.input === 'email' && params.inputValidator === null) {
-        params.inputValidator = function(email) {
-          return new Promise(function(resolve, reject) {
-            var emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
-            if (emailRegex.test(email)) {
-              resolve();
-            } else {
-              reject('Invalid email address');
-            }
-          });
-        };
-      }
-
       break;
 
     default:
@@ -644,7 +768,7 @@ function modalDependant() {
     // Close on timer
     if (params.timer) {
       modal.timeout = setTimeout(function() {
-        sweetAlert.closeModal(params.onClose);
+        sweetAlert$1.closeModal(params.onClose);
         reject('timer');
       }, params.timer);
     }
@@ -689,24 +813,24 @@ function modalDependant() {
 
     var confirm = function(value) {
       if (params.showLoaderOnConfirm) {
-        sweetAlert.showLoading();
+        sweetAlert$1.showLoading();
       }
 
       if (params.preConfirm) {
         params.preConfirm(value, params.extraParams).then(
           function(preConfirmValue) {
-            sweetAlert.closeModal(params.onClose);
+            sweetAlert$1.closeModal(params.onClose);
             resolve(preConfirmValue || value);
           },
           function(error) {
-            sweetAlert.hideLoading();
+            sweetAlert$1.hideLoading();
             if (error) {
-              sweetAlert.showValidationError(error);
+              sweetAlert$1.showValidationError(error);
             }
           }
         );
       } else {
-        sweetAlert.closeModal(params.onClose);
+        sweetAlert$1.closeModal(params.onClose);
         resolve(value);
       }
     };
@@ -753,34 +877,64 @@ function modalDependant() {
         case 'click':
           // Clicked 'confirm'
           if (targetedConfirm && modalIsVisible) {
-            if (params.input) {
-              var inputValue = getInputValue();
+            if (params.inputs) {
+              var inputValues = {};
+              var validators = [];
+              sweetAlert$1.disableInput();
+              for (var i = params.inputs.length - 1; i >= 0; i--) {
+                var input = params.inputs[i];
 
-              if (params.inputValidator) {
-                sweetAlert.disableInput();
-                params.inputValidator(inputValue, params.extraParams).then(
-                  function() {
-                    sweetAlert.enableInput();
-                    confirm(inputValue);
-                  },
-                  function(error) {
-                    sweetAlert.enableInput();
-                    if (error) {
-                      sweetAlert.showValidationError(error);
-                    }
-                  }
-                );
-              } else {
-                confirm(inputValue);
+                // Add any validators to an array so we can 
+                // utilise Promise.all
+                if (input.validator) {
+                  validators.push(input.validator(input.value, input));
+                }
+
+                inputValues[input.name] = input.value;
               }
-
-            } else {
-              confirm(true);
+              if (validators.length) {
+                Promise.all(validators)
+                  .then(function() {
+                    sweetAlert$1.enableInput();
+                    confirm(inputValues);
+                  }, function(error) {
+                    sweetAlert$1.enableInput();
+                    if (error) {
+                      sweetAlert$1.showValidationError(error.message, input);
+                    }
+                  });
+              }
+              return;
+              confirm(inputValues);
             }
+            // if (params.input) {
+            //   var inputValue = getInputValue();
+
+            //   if (params.inputValidator) {
+            //     sweetAlert.disableInput();
+            //     params.inputValidator(inputValue, params.extraParams).then(
+            //       function() {
+            //         sweetAlert.enableInput();
+            //         confirm(inputValue);
+            //       },
+            //       function(error) {
+            //         sweetAlert.enableInput();
+            //         if (error) {
+            //           sweetAlert.showValidationError(error);
+            //         }
+            //       }
+            //     );
+            //   } else {
+            //     confirm(inputValue);
+            //   }
+
+            // } else {
+            //   confirm(true);
+            // }
 
           // Clicked 'cancel'
           } else if (targetedCancel && modalIsVisible) {
-            sweetAlert.closeModal(params.onClose);
+            sweetAlert$1.closeModal(params.onClose);
             reject('cancel');
           }
 
@@ -800,14 +954,14 @@ function modalDependant() {
 
     // Closing modal by close button
     getCloseButton().onclick = function() {
-      sweetAlert.closeModal(params.onClose);
+      sweetAlert$1.closeModal(params.onClose);
       reject('close');
     };
 
     // Closing modal by overlay click
     getOverlay().onclick = function() {
       if (params.allowOutsideClick) {
-        sweetAlert.closeModal(params.onClose);
+        sweetAlert$1.closeModal(params.onClose);
         reject('overlay');
       }
     };
@@ -892,7 +1046,7 @@ function modalDependant() {
             fireClick($confirmButton, e);
           }
         } else if (keyCode === 27 && params.allowEscapeKey === true) {
-          sweetAlert.closeModal(params.onClose);
+          sweetAlert$1.closeModal(params.onClose);
           reject('esc');
         }
       }
@@ -910,7 +1064,7 @@ function modalDependant() {
     /**
      * Show spinner instead of Confirm button and disable Cancel button
      */
-    sweetAlert.showLoading = sweetAlert.enableLoading = function() {
+    sweetAlert$1.showLoading = sweetAlert$1.enableLoading = function() {
       addClass($confirmButton, 'loading');
       addClass(modal, 'loading');
       $confirmButton.disabled = true;
@@ -920,203 +1074,203 @@ function modalDependant() {
     /**
      * Show spinner instead of Confirm button and disable Cancel button
      */
-    sweetAlert.hideLoading = sweetAlert.disableLoading = function() {
+    sweetAlert$1.hideLoading = sweetAlert$1.disableLoading = function() {
       removeClass($confirmButton, 'loading');
       removeClass(modal, 'loading');
       $confirmButton.disabled = false;
       $cancelButton.disabled = false;
     };
 
-    sweetAlert.enableButtons = function() {
+    sweetAlert$1.enableButtons = function() {
       $confirmButton.disabled = false;
       $cancelButton.disabled = false;
     };
 
-    sweetAlert.disableButtons = function() {
+    sweetAlert$1.disableButtons = function() {
       $confirmButton.disabled = true;
       $cancelButton.disabled = true;
     };
 
-    sweetAlert.enableInput = function() {
-      var input = getInput();
-      if (input.type === 'radio') {
-        var radiosContainer = input.parentNode.parentNode;
-        var radios = radiosContainer.querySelectorAll('input');
-        for (var i = 0; i < radios.length; i++) {
-          radios[i].disabled = false;
+    sweetAlert$1.enableInput = function() {
+      var inputTypes = ['input', 'select', 'textarea'];
+
+      for (var i = inputTypes.length - 1; i >= 0; i--) {
+        var inputNodes = modal.getElementsByTagName('form')[0].getElementsByTagName(inputTypes[i]);
+        for (var iNode = inputNodes.length - 1; iNode >= 0; iNode--) {
+          inputNodes[iNode].removeAttribute("disabled");
         }
-      } else {
-        input.disabled = false;
       }
     };
 
-    sweetAlert.disableInput = function() {
-      var input = getInput();
-      if (input.type === 'radio') {
-        var radiosContainer = input.parentNode.parentNode;
-        var radios = radiosContainer.querySelectorAll('input');
-        for (var i = 0; i < radios.length; i++) {
-          radios[i].disabled = true;
+    sweetAlert$1.disableInput = function() {
+      var inputTypes = ['input', 'select', 'textarea'];
+
+      for (var i = inputTypes.length - 1; i >= 0; i--) {
+        var inputNodes = modal.getElementsByTagName('form')[0].getElementsByTagName(inputTypes[i]);
+        for (var iNode = inputNodes.length - 1; iNode >= 0; iNode--) {
+          inputNodes[iNode].setAttribute("disabled", true);
         }
-      } else {
-        input.disabled = true;
       }
     };
 
-    sweetAlert.showValidationError = function(error) {
+    sweetAlert$1.showValidationError = function(error, input) {
       var $validationError = modal.querySelector('.' + swalClasses.validationerror);
       $validationError.innerHTML = error;
       show($validationError);
 
-      var input = getInput();
-      focusInput(input);
-      addClass(input, 'error');
+      var inputNode = document.getElementById(input.id);
+      focusInput(inputNode);
+      addClass(inputNode, 'error');
     };
 
-    sweetAlert.resetValidationError = function() {
+    sweetAlert$1.resetValidationError = function() {
       var $validationError = modal.querySelector('.' + swalClasses.validationerror);
       hide($validationError);
 
-      var input = getInput();
-      if (input) {
-        removeClass(input, 'error');
+      var inputTypes = ['input', 'select', 'textarea'];
+
+      for (var i = inputTypes.length - 1; i >= 0; i--) {
+        var inputNodes = modal.getElementsByTagName('form')[0].getElementsByTagName(inputTypes[i]);
+        for (var iNode = inputNodes.length - 1; iNode >= 0; iNode--) {
+          removeClass(inputNodes[iNode], 'error');
+        }
       }
     };
 
-    sweetAlert.enableButtons();
-    sweetAlert.hideLoading();
-    sweetAlert.resetValidationError();
+    sweetAlert$1.enableButtons();
+    sweetAlert$1.hideLoading();
+    sweetAlert$1.resetValidationError();
 
     // input, select
-    var inputTypes = ['input', 'select', 'radio', 'checkbox', 'textarea'];
-    var input;
-    for (i = 0; i < inputTypes.length; i++) {
-      var inputClass = swalClasses[inputTypes[i]];
-      input = getChildByClass(modal, inputClass);
+    // var inputTypes = ['input', 'select', 'radio', 'checkbox', 'textarea'];
+    // var input;
+    // for (i = 0; i < inputTypes.length; i++) {
+    //   var inputClass = swalClasses[inputTypes[i]];
+    //   input = dom.getChildByClass(modal, inputClass);
 
-      // set attributes
-      while (input.attributes.length > 0) {
-        input.removeAttribute(input.attributes[0].name);
-      }
-      for (var attr in params.inputAttributes) {
-        input.setAttribute(attr, params.inputAttributes[attr]);
-      }
+    //   // set attributes
+    //   while (input.attributes.length > 0) {
+    //     input.removeAttribute(input.attributes[0].name);
+    //   }
+    //   for (var attr in params.inputAttributes) {
+    //     input.setAttribute(attr, params.inputAttributes[attr]);
+    //   }
 
-      // set class
-      input.className = inputClass;
-      if (params.inputClass) {
-        addClass(input, params.inputClass);
-      }
+    //   // set class
+    //   input.className = inputClass;
+    //   if (params.inputClass) {
+    //     dom.addClass(input, params.inputClass);
+    //   }
 
-      _hide(input);
-    }
+    //   dom._hide(input);
+    // }
 
-    var populateInputOptions;
-    switch (params.input) {
-      case 'text':
-      case 'email':
-      case 'password':
-      case 'file':
-        input = getChildByClass(modal, swalClasses.input);
-        input.value = params.inputValue;
-        input.placeholder = params.inputPlaceholder;
-        input.type = params.input;
-        _show(input);
-        break;
-      case 'select':
-        var select = getChildByClass(modal, swalClasses.select);
-        select.innerHTML = '';
-        if (params.inputPlaceholder) {
-          var placeholder = document.createElement('option');
-          placeholder.innerHTML = params.inputPlaceholder;
-          placeholder.value = '';
-          placeholder.disabled = true;
-          placeholder.selected = true;
-          select.appendChild(placeholder);
-        }
-        populateInputOptions = function(inputOptions) {
-          for (var optionValue in inputOptions) {
-            var option = document.createElement('option');
-            option.value = optionValue;
-            option.innerHTML = inputOptions[optionValue];
-            if (params.inputValue === optionValue) {
-              option.selected = true;
-            }
-            select.appendChild(option);
-          }
-          _show(select);
-          select.focus();
-        };
-        break;
-      case 'radio':
-        var radio = getChildByClass(modal, swalClasses.radio);
-        radio.innerHTML = '';
-        populateInputOptions = function(inputOptions) {
-          for (var radioValue in inputOptions) {
-            var id = 1;
-            var radioInput = document.createElement('input');
-            var radioLabel = document.createElement('label');
-            var radioLabelSpan = document.createElement('span');
-            radioInput.type = 'radio';
-            radioInput.name = swalClasses.radio;
-            radioInput.value = radioValue;
-            radioInput.id = swalClasses.radio + '-' + (id++);
-            if (params.inputValue === radioValue) {
-              radioInput.checked = true;
-            }
-            radioLabelSpan.innerHTML = inputOptions[radioValue];
-            radioLabel.appendChild(radioInput);
-            radioLabel.appendChild(radioLabelSpan);
-            radioLabel.for = radioInput.id;
-            radio.appendChild(radioLabel);
-          }
-          _show(radio);
-          var radios = radio.querySelectorAll('input');
-          if (radios.length) {
-            radios[0].focus();
-          }
-        };
-        break;
-      case 'checkbox':
-        var checkbox = getChildByClass(modal, swalClasses.checkbox);
-        var checkboxInput = modal.querySelector('#' + swalClasses.checkbox);
-        checkboxInput.value = 1;
-        checkboxInput.checked = Boolean(params.inputValue);
-        var label = checkbox.getElementsByTagName('span');
-        if (label.length) {
-          checkbox.removeChild(label[0]);
-        }
-        label = document.createElement('span');
-        label.innerHTML = params.inputPlaceholder;
-        checkbox.appendChild(label);
-        _show(checkbox);
-        break;
-      case 'textarea':
-        var textarea = getChildByClass(modal, swalClasses.textarea);
-        textarea.value = params.inputValue;
-        textarea.placeholder = params.inputPlaceholder;
-        _show(textarea);
-        break;
-      case null:
-        break;
-      default:
-        console.error('Unexpected type of input! Expected "text" or "email" or "password", "select", "checkbox", "textarea" or "file", got ' + typeof arguments[0]);
-        break;
-    }
+    // var populateInputOptions;
+    // switch (params.input) {
+    //   case 'text':
+    //   case 'email':
+    //   case 'password':
+    //   case 'file':
+    //     input = dom.getChildByClass(modal, swalClasses.input);
+    //     input.value = params.inputValue;
+    //     input.placeholder = params.inputPlaceholder;
+    //     input.type = params.input;
+    //     dom._show(input);
+    //     break;
+    //   case 'select':
+    //     var select = dom.getChildByClass(modal, swalClasses.select);
+    //     select.innerHTML = '';
+    //     if (params.inputPlaceholder) {
+    //       var placeholder = document.createElement('option');
+    //       placeholder.innerHTML = params.inputPlaceholder;
+    //       placeholder.value = '';
+    //       placeholder.disabled = true;
+    //       placeholder.selected = true;
+    //       select.appendChild(placeholder);
+    //     }
+    //     populateInputOptions = function(inputOptions) {
+    //       for (var optionValue in inputOptions) {
+    //         var option = document.createElement('option');
+    //         option.value = optionValue;
+    //         option.innerHTML = inputOptions[optionValue];
+    //         if (params.inputValue === optionValue) {
+    //           option.selected = true;
+    //         }
+    //         select.appendChild(option);
+    //       }
+    //       dom._show(select);
+    //       select.focus();
+    //     };
+    //     break;
+    //   case 'radio':
+    //     var radio = dom.getChildByClass(modal, swalClasses.radio);
+    //     radio.innerHTML = '';
+    //     populateInputOptions = function(inputOptions) {
+    //       for (var radioValue in inputOptions) {
+    //         var id = 1;
+    //         var radioInput = document.createElement('input');
+    //         var radioLabel = document.createElement('label');
+    //         var radioLabelSpan = document.createElement('span');
+    //         radioInput.type = 'radio';
+    //         radioInput.name = swalClasses.radio;
+    //         radioInput.value = radioValue;
+    //         radioInput.id = swalClasses.radio + '-' + (id++);
+    //         if (params.inputValue === radioValue) {
+    //           radioInput.checked = true;
+    //         }
+    //         radioLabelSpan.innerHTML = inputOptions[radioValue];
+    //         radioLabel.appendChild(radioInput);
+    //         radioLabel.appendChild(radioLabelSpan);
+    //         radioLabel.for = radioInput.id;
+    //         radio.appendChild(radioLabel);
+    //       }
+    //       dom._show(radio);
+    //       var radios = radio.querySelectorAll('input');
+    //       if (radios.length) {
+    //         radios[0].focus();
+    //       }
+    //     };
+    //     break;
+    //   case 'checkbox':
+    //     var checkbox = dom.getChildByClass(modal, swalClasses.checkbox);
+    //     var checkboxInput = modal.querySelector('#' + swalClasses.checkbox);
+    //     checkboxInput.value = 1;
+    //     checkboxInput.checked = Boolean(params.inputValue);
+    //     var label = checkbox.getElementsByTagName('span');
+    //     if (label.length) {
+    //       checkbox.removeChild(label[0]);
+    //     }
+    //     label = document.createElement('span');
+    //     label.innerHTML = params.inputPlaceholder;
+    //     checkbox.appendChild(label);
+    //     dom._show(checkbox);
+    //     break;
+    //   case 'textarea':
+    //     var textarea = dom.getChildByClass(modal, swalClasses.textarea);
+    //     textarea.value = params.inputValue;
+    //     textarea.placeholder = params.inputPlaceholder;
+    //     dom._show(textarea);
+    //     break;
+    //   case null:
+    //     break;
+    //   default:
+    //     console.error('Unexpected type of input! Expected "text" or "email" or "password", "select", "checkbox", "textarea" or "file", got ' + typeof arguments[0]);
+    //     break;
+    // }
 
-    if (params.input === 'select' || params.input === 'radio') {
-      if (params.inputOptions instanceof Promise) {
-        sweetAlert.showLoading();
-        params.inputOptions.then(function(inputOptions) {
-          sweetAlert.hideLoading();
-          populateInputOptions(inputOptions);
-        });
-      } else if (typeof params.inputOptions === 'object') {
-        populateInputOptions(params.inputOptions);
-      } else {
-        console.error('Unexpected type of inputOptions! Expected object or Promise, got ' + params.inputOptions);
-      }
-    }
+    // if (params.input === 'select' || params.input === 'radio') {
+    //   if (params.inputOptions instanceof Promise) {
+    //     sweetAlert.showLoading();
+    //     params.inputOptions.then(function(inputOptions) {
+    //       sweetAlert.hideLoading();
+    //       populateInputOptions(inputOptions);
+    //     });
+    //   } else if (typeof params.inputOptions === 'object') {
+    //     populateInputOptions(params.inputOptions);
+    //   } else {
+    //     console.error('Unexpected type of inputOptions! Expected object or Promise, got ' + params.inputOptions);
+    //   }
+    // }
 
     fixVerticalPosition();
     openModal(params.animation, params.onOpen);
@@ -1127,13 +1281,13 @@ function modalDependant() {
 }
 
 // SweetAlert function
-function sweetAlert() {
+function sweetAlert$1() {
   // Copy arguments to the local args variable
   var args = arguments;
   var modal = getModal();
 
   if (modal === null) {
-    sweetAlert.init();
+    sweetAlert$1.init();
     modal = getModal();
   }
 
@@ -1147,11 +1301,11 @@ function sweetAlert() {
 /*
  * Global function for chaining sweetAlert modals
  */
-sweetAlert.queue = function(steps) {
+sweetAlert$1.queue = function(steps) {
   return new Promise(function(resolve, reject) {
     (function step(i, callback) {
       if (i < steps.length) {
-        sweetAlert(steps[i]).then(function() {
+        sweetAlert$1(steps[i]).then(function() {
           step(i+1, callback);
         }, function(dismiss) {
           reject(dismiss);
@@ -1166,7 +1320,7 @@ sweetAlert.queue = function(steps) {
 /*
  * Global function to close sweetAlert
  */
-sweetAlert.close = sweetAlert.closeModal = function(onComplete) {
+sweetAlert$1.close = sweetAlert$1.closeModal = function(onComplete) {
   var modal = getModal();
   removeClass(modal, 'show-swal2');
   addClass(modal, 'hide-swal2');
@@ -1207,21 +1361,21 @@ sweetAlert.close = sweetAlert.closeModal = function(onComplete) {
 /*
  * Global function to click 'Confirm' button
  */
-sweetAlert.clickConfirm = function() {
+sweetAlert$1.clickConfirm = function() {
   getConfirmButton().click();
 };
 
 /*
  * Global function to click 'Cancel' button
  */
-sweetAlert.clickCancel = function() {
+sweetAlert$1.clickCancel = function() {
   getCancelButton().click();
 };
 
 /*
  * Add modal + overlay to DOM
  */
-sweetAlert.init = function() {
+sweetAlert$1.init = function() {
   if (typeof document === 'undefined') {
     console.log('SweetAlert2 requires document to initialize');
     return;
@@ -1236,34 +1390,7 @@ sweetAlert.init = function() {
 
   document.body.appendChild(sweetWrap);
 
-  var modal = getModal();
-  var $input = getChildByClass(modal, swalClasses.input);
-  var $select = getChildByClass(modal, swalClasses.select);
-  var $checkbox = modal.querySelector('#' + swalClasses.checkbox);
-  var $textarea = getChildByClass(modal, swalClasses.textarea);
-
-  $input.oninput = function() {
-    sweetAlert.resetValidationError();
-  };
-
-  $input.onkeyup = function(event) {
-    event.stopPropagation();
-    if (event.keyCode === 13) {
-      sweetAlert.clickConfirm();
-    }
-  };
-
-  $select.onchange = function() {
-    sweetAlert.resetValidationError();
-  };
-
-  $checkbox.onchange = function() {
-    sweetAlert.resetValidationError();
-  };
-
-  $textarea.oninput = function() {
-    sweetAlert.resetValidationError();
-  };
+  // var modal = dom.getModal();
 
   window.addEventListener('resize', fixVerticalPosition, false);
 };
@@ -1272,7 +1399,7 @@ sweetAlert.init = function() {
  * Set default params for each popup
  * @param {Object} userParams
  */
-sweetAlert.setDefaults = function(userParams) {
+sweetAlert$1.setDefaults = function(userParams) {
   if (!userParams) {
     throw new Error('userParams is required');
   }
@@ -1286,24 +1413,24 @@ sweetAlert.setDefaults = function(userParams) {
 /**
  * Reset default params for each popup
  */
-sweetAlert.resetDefaults = function() {
+sweetAlert$1.resetDefaults = function() {
   modalParams = extend({}, defaultParams);
 };
 
-sweetAlert.version = '4.0.9';
+sweetAlert$1.version = '';
 
-window.sweetAlert = window.swal = sweetAlert;
+window.sweetAlert = window.swal = sweetAlert$1;
 
 /*
 * If library is injected after page has loaded
 */
 (function() {
   if (document.readyState === 'complete' || document.readyState === 'interactive' && document.body) {
-    sweetAlert.init();
+    sweetAlert$1.init();
   } else {
     document.addEventListener('DOMContentLoaded', function onDomContentLoaded() {
       document.removeEventListener('DOMContentLoaded', onDomContentLoaded, false);
-      sweetAlert.init();
+      sweetAlert$1.init();
     }, false);
   }
 })();
@@ -1317,4 +1444,4 @@ if (typeof Promise === 'function') {
   };
 }
 
-module.exports = sweetAlert;
+module.exports = sweetAlert$1;

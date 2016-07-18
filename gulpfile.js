@@ -64,12 +64,7 @@ gulp.task('default', ['compress', 'sass']);
 
 gulp.task('watch', function() {
   gulp.watch([
-    'src/sweetalert2.js',
-    'src/utils/classes.js',
-    'src/utils/default.js',
-    'src/utils/dom.js',
-    'src/utils/utils.js',
-    'src/utils/classes.js'
+    'src/**/*.js',
   ], ['compress']);
 
   gulp.watch([
