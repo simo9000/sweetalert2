@@ -23,6 +23,8 @@
   overflow-y: auto;
   display: none;
   z-index: 2000; }
+  .swal2-modal:focus {
+    outline: none; }
   .swal2-modal.loading {
     overflow-y: hidden; }
   .swal2-modal h2 {

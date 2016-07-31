@@ -148,6 +148,14 @@
     return rgb;
   };
 
+  /*
+   * check if variable is function type. http://stackoverflow.com/questions/5999998/how-can-i-check-if-a-javascript-variable-is-function-type
+   */
+  var isFunction = function(functionToCheck) {
+      var getType = {};
+      return functionToCheck && getType.toString.call(functionToCheck) === '[object Function]';
+  };
+
   var mediaqueryId = swalPrefix + 'mediaquery';
 
   // Remember state in cases where opening and handling a modal will fiddle with it.
@@ -375,7 +383,7 @@
   var resetPrevState = function() {
     var modal = getModal();
     window.onkeydown = states.previousWindowKeyDown;
-    if (states.previousActiveElement) {
+    if (states.previousActiveElement && states.previousActiveElement.focus) {
       states.previousActiveElement.focus();
     }
     clearTimeout(modal.timeout);
@@ -1173,15 +1181,23 @@
   sweetAlert.queue = function(steps) {
     return new Promise(function(resolve, reject) {
       (function step(i, callback) {
-        if (i < steps.length) {
-          sweetAlert(steps[i]).then(function() {
-            step(i+1, callback);
-          }, function(dismiss) {
-            reject(dismiss);
-          });
-        } else {
-          resolve();
-        }
+          var nextStep = null;
+          if (isFunction(steps)) {
+              nextStep = steps(i);
+          } else if (i < steps.length) {
+              nextStep = steps[i];
+          } else {
+              resolve();
+          }
+          if (nextStep) {
+              sweetAlert(nextStep).then(function() {
+                  step(i+1, callback);
+              }, function(dismiss) {
+                  reject(dismiss);
+              });
+          } else {
+              resolve();
+          }
       })(0);
     });
   };
