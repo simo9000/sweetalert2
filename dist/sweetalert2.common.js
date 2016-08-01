@@ -148,8 +148,7 @@ var colorLuminance = function(hex, lum) {
  * check if variable is function type. http://stackoverflow.com/questions/5999998/how-can-i-check-if-a-javascript-variable-is-function-type
  */
 var isFunction = function(functionToCheck) {
-    var getType = {};
-    return functionToCheck && getType.toString.call(functionToCheck) === '[object Function]';
+    return typeof functionToCheck === "function";
 };
 
 var mediaqueryId = swalPrefix + 'mediaquery';
@@ -1182,8 +1181,6 @@ sweetAlert.queue = function(steps) {
             nextStep = steps(i);
         } else if (i < steps.length) {
             nextStep = steps[i];
-        } else {
-            resolve();
         }
         if (nextStep) {
             sweetAlert(nextStep).then(function() {
