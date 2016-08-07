@@ -1177,29 +1177,53 @@
   /*
    * Global function for chaining sweetAlert modals
    */
-  sweetAlert.queue = function(steps) {
+  sweetAlert.queue = function(steps, path) {
+    var stateObject;
+    if (path) {
+      stateObject = {
+        fork: function(newPath) {
+          path = newPath;
+          this.next = newPath[0];
+        },
+        repeatCurrent: function() {
+          path.unshift(this.current);
+          this.next = this.current;
+        },
+        insert: function(state) {
+          path.unshift(state);
+          this.next = this.state;
+        },
+        terminate: function() {
+          path = [];
+          this.next = '';
+        }
+      };
+    }
     return new Promise(function(resolve, reject) {
       (function step(i, callback) {
-          var nextStep = null;
-          if (isFunction(steps)) {
-              nextStep = steps(i);
-          } else if (i < steps.length) {
-              nextStep = steps[i];
-<<<<<<< Updated upstream
+        var nextStep = null;
+        if (isFunction(steps)) {
+          if (path && path.length > 0) {
+            stateObject.current = path[0];
+            stateObject.next = path.length > 1 ? path[1] : '';
+            stateObject.alertNumber = i;
+            path.shift();
+            nextStep = steps(stateObject);
           } else {
-              resolve();
-=======
->>>>>>> Stashed changes
+            nextStep = steps(i);
           }
-          if (nextStep) {
-              sweetAlert(nextStep).then(function() {
-                  step(i+1, callback);
-              }, function(dismiss) {
-                  reject(dismiss);
-              });
-          } else {
-              resolve();
-          }
+        } else if (i < steps.length) {
+          nextStep = steps[i];
+        }
+        if (nextStep) {
+          sweetAlert(nextStep).then(function() {
+            step(i+1, callback);
+          }, function(dismiss) {
+            reject(dismiss);
+          });
+        } else {
+          resolve();
+        }
       })(0);
     });
   };
