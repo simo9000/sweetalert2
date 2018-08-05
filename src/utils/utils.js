@@ -1,39 +1,82 @@
-export var extend = function(a, b) {
-  for (var key in b) {
-    if (b.hasOwnProperty(key)) {
-      a[key] = b[key];
+export const consolePrefix = 'SweetAlert2:'
+
+/**
+ * Filter the unique values into a new array
+ * @param arr
+ */
+export const uniqueArray = (arr) => {
+  const result = []
+  for (let i = 0; i < arr.length; i++) {
+    if (result.indexOf(arr[i]) === -1) {
+      result.push(arr[i])
     }
   }
+  return result
+}
 
-  return a;
-};
-
-
-/*
- * Set hover, active and focus-states for buttons (source: http://www.sitepoint.com/javascript-generate-lighter-darker-color)
+/**
+ * Convert NodeList to Array
+ * @param nodeList
  */
-export var colorLuminance = function(hex, lum) {
-  // Validate hex string
-  hex = String(hex).replace(/[^0-9a-f]/gi, '');
-  if (hex.length < 6) {
-    hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2];
-  }
-  lum = lum || 0;
+export const toArray = (nodeList) => Array.prototype.slice.call(nodeList)
 
-  // Convert to decimal and change luminosity
-  var rgb = '#';
-  for (var i = 0; i < 3; i++) {
-    var c = parseInt(hex.substr(i * 2, 2), 16);
-    c = Math.round(Math.min(Math.max(0, c + (c * lum)), 255)).toString(16);
-    rgb += ('00' + c).substr(c.length);
-  }
-
-  return rgb;
-};
-
-/*
- * check if variable is function type. http://stackoverflow.com/questions/5999998/how-can-i-check-if-a-javascript-variable-is-function-type
+  /**
+ * Converts `inputOptions` into an array of `[value, label]`s
+ * @param inputOptions
  */
-export var isFunction = function(functionToCheck) {
-  return typeof functionToCheck === 'function';
-};
+export const formatInputOptions = (inputOptions) => {
+  const result = []
+  if (typeof Map !== 'undefined' && inputOptions instanceof Map) {
+    inputOptions.forEach((value, key) => {
+      result.push([key, value])
+    })
+  } else {
+    Object.keys(inputOptions).forEach(key => {
+      result.push([key, inputOptions[key]])
+    })
+  }
+  return result
+}
+
+/**
+ * Standardise console warnings
+ * @param message
+ */
+export const warn = (message) => {
+  console.warn(`${consolePrefix} ${message}`)
+}
+
+/**
+ * Standardise console errors
+ * @param message
+ */
+export const error = (message) => {
+  console.error(`${consolePrefix} ${message}`)
+}
+
+/**
+ * Private global state for `warnOnce`
+ * @type {Array}
+ * @private
+ */
+const previousWarnOnceMessages = []
+
+/**
+ * Show a console warning, but only if it hasn't already been shown
+ * @param message
+ */
+export const warnOnce = (message) => {
+  if (!previousWarnOnceMessages.includes(message)) {
+    previousWarnOnceMessages.push(message)
+    warn(message)
+  }
+}
+
+/**
+ * If `arg` is a function, call it (with no arguments or context) and return the result.
+ * Otherwise, just pass the value through
+ * @param arg
+ */
+export const callIfFunction = (arg) => typeof arg === 'function' ? arg() : arg
+
+export const isThenable = (arg) => typeof arg === 'object' && typeof arg.then === 'function'

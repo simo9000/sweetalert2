@@ -1,50 +1,93 @@
-SweetAlert2 [![Build Status](https://travis-ci.org/limonte/sweetalert2.svg?branch=master)](https://travis-ci.org/limonte/sweetalert2)
------------
+<p align="center">
+  <a href="https://sweetalert2.github.io/">
+    <img src="/assets/swal2-logo.png" alt="SweetAlert2">
+  </a>
+</p>
 
-An awesome replacement for JavaScript's popup boxes.
+<br>
 
-What's the difference between SweetAlert and SweetAlert2?
----------------------------------------------------------
+<p align="center">
+  <a href="https://travis-ci.org/sweetalert2/sweetalert2"><img alt="Build Status: Linux" src="https://travis-ci.org/sweetalert2/sweetalert2.svg?branch=master"></a>
+  <a href="https://ci.appveyor.com/project/limonte/sweetalert2/branch/master"><img alt="Build Status: Windows" src="https://ci.appveyor.com/api/projects/status/paqdtx0snu53w5c1/branch/master?svg=true"></a>
+  <a href="https://coveralls.io/github/sweetalert2/sweetalert2?branch=master"><img src="https://coveralls.io/repos/github/sweetalert2/sweetalert2/badge.svg?branch=master&" alt="Coverage Status"></a>
+  <a href="https://www.npmjs.com/package/sweetalert2"><img alt="Version" src="https://img.shields.io/npm/v/sweetalert2.svg"></a>
+  <a href="https://www.jsdelivr.com/package/npm/sweetalert2"><img alt="jsdelivr" src="https://data.jsdelivr.com/v1/package/npm/sweetalert2/badge?style=rounded"></a>
+  <a href="https://bundlephobia.com/result?p=sweetalert2"><img alt="gzip size" src="http://img.badgesize.io/sweetalert2/sweetalert2/dist/dist/sweetalert2.all.min.js.svg?compression=gzip"></a>
+  <a href="https://www.patreon.com/limonte"><img alt="Support me on Patreon" src="http://ionicabizau.github.io/badges/patreon.svg"></a>
+  <a href="https://www.paypal.me/limonte/5eur"><img alt="PayPal Donate" src="http://ionicabizau.github.io/badges/paypal.svg"></a>
+</p>
 
-Reason of creating this fork is inactivity of original SweetAlert plugin:
-[http://stackoverflow.com/a/27842854/1331425](http://stackoverflow.com/a/27842854/1331425)
-[SweetAlert to SweetAlert2 migration guide](https://github.com/limonte/sweetalert2/wiki/Migration-from-SweetAlert-to-SweetAlert2)
+<p align="center">
+  A beautiful, responsive, customizable, accessible (WAI-ARIA) replacement for JavaScript's popup boxes. Zero dependencies.
+</p>
+
+<p align="center">
+  <a href="https://sweetalert2.github.io/">
+    <img src="https://raw.github.com/sweetalert2/sweetalert2/master/assets/sweetalert2.gif" width="562"><br>
+    See SweetAlert2 in action ↗
+  </a>
+</p>
 
 ---
 
-[See SweetAlert2 in action!](https://limonte.github.io/sweetalert2/)
+:point_right: **Upgrading from v6.x to v7.x?** [Read the release notes!](https://github.com/sweetalert2/sweetalert2/releases/tag/v7.0.0)
 
-<img src="https://raw.github.com/limonte/sweetalert2/master/sweetalert2.gif" width="686">
+:point_right: **Migrating from [SweetAlert](https://github.com/t4t5/sweetalert)?** [SweetAlert 1.x to SweetAlert2 migration guide](https://github.com/sweetalert2/sweetalert2/wiki/Migration-from-SweetAlert-to-SweetAlert2)
 
+---
 
-Usage
------
-
-To install:
+Installation
+------------
 
 ```bash
-bower install sweetalert2
+npm install --save sweetalert2
 ```
 
 Or:
 
 ```bash
-npm install sweetalert2
+bower install --save sweetalert2
 ```
 
-Or download from CDN:
- - [https://www.jsdelivr.com/projects/sweetalert2](https://www.jsdelivr.com/projects/sweetalert2)
- - [https://cdnjs.com/libraries/limonte-sweetalert2](https://cdnjs.com/libraries/limonte-sweetalert2)
+Or download from CDN: [jsdelivr.net/npm/sweetalert2](https://cdn.jsdelivr.net/npm/sweetalert2)
 
-To use:
 
+Usage
+-----
 
 ```html
-<script src="bower_components/es6-promise/promise.min.js"></script> <!-- for IE support -->
+<script src="sweetalert2/dist/sweetalert2.all.min.js"></script>
 
-<script src="bower_components/sweetalert2/dist/sweetalert2.min.js"></script>
-<link rel="stylesheet" type="text/css" href="bower_components/sweetalert2/dist/sweetalert2.min.css">
+<!-- Include a polyfill for ES6 Promises (optional) for IE11, UC Browser and Android browser support -->
+<script src="https://cdn.jsdelivr.net/npm/promise-polyfill"></script>
 ```
+
+You can also include the stylesheet separately if desired:
+
+```html
+<script src="sweetalert2/dist/sweetalert2.min.js"></script>
+<link rel="stylesheet" href="sweetalert2/dist/sweetalert2.min.css">
+```
+
+Or:
+
+```js
+// ES6 Modules or TypeScript
+import Swal from 'sweetalert2'
+
+// CommonJS
+const Swal = require('sweetalert2')
+```
+
+It's possible to import JS and CSS separately, e.g. if you need to customize styles:
+
+```js
+import swal from 'sweetalert2/dist/sweetalert2.js'
+
+import 'sweetalert2/src/sweetalert2.scss'
+```
+
+Please note that [TypeScript is well-supported](https://github.com/sweetalert2/sweetalert2/blob/master/sweetalert2.d.ts), so you don't have to install a third-party declaration file.
 
 
 Examples
@@ -52,176 +95,89 @@ Examples
 
 The most basic message:
 
-```javascript
-swal('Hello world!');
+```js
+Swal('Hello world!')
 ```
 
 A message signaling an error:
 
-```javascript
-swal('Oops...', 'Something went wrong!', 'error');
+```js
+Swal('Oops...', 'Something went wrong!', 'error')
 ```
 
 Handling the result of SweetAlert2 modal:
 
-```javascript
-swal({
+```js
+Swal({
   title: 'Are you sure?',
   text: 'You will not be able to recover this imaginary file!',
   type: 'warning',
   showCancelButton: true,
   confirmButtonText: 'Yes, delete it!',
-  cancelButtonText: 'No, keep it',
-}).then(function() {
-  swal(
-    'Deleted!',
-    'Your imaginary file has been deleted.',
-    'success'
-  );
-}, function(dismiss) {
-  // dismiss can be 'cancel', 'overlay', 'close', 'timer'
-  if (dismiss === 'cancel') {
-    swal(
+  cancelButtonText: 'No, keep it'
+}).then((result) => {
+  if (result.value) {
+    Swal(
+      'Deleted!',
+      'Your imaginary file has been deleted.',
+      'success'
+    )
+  // For more information about handling dismissals please visit
+  // https://sweetalert2.github.io/#handling-dismissals
+  } else if (result.dismiss === Swal.DismissReason.cancel) {
+    Swal(
       'Cancelled',
       'Your imaginary file is safe :)',
       'error'
-    );
+    )
   }
-});
+})
 ```
 
-[View more examples](https://limonte.github.io/sweetalert2/)
-
-
-Handling Dismissals
--------------------
-
-When an alert is dismissed by the user, the Promise returned by `swal()` will reject with a string documenting the reason it was dismissed:
-
-| String      | Description                                             | Related configuration |
-| ----------- | ------------------------------------------------------- | --------------------- |
-| `"overlay"` | The user clicked the overlay.                           | `allowOutsideClick`   |
-| `"cancel"`  | The user clicked the cancel button.                     | `showCancelButton`    |
-| `"close"`   | The user clicked the close button.                      | `showCloseButton`     |
-| `"esc"`     | The user pressed the <kbd>Esc</kbd> key.                | `allowEscapeKey`      |
-| `"timer"`   | The timer ran out, and the alert closed automatically.  | `timer`               |
-
-If this rejection is not handled by your code, it will be logged as an error. To avoid this happening, you need to add a rejection handler to the Promise. Alternatively, SweetAlert2 provides the `.done()` method as a quick way to simply suppress the errors:
-
-    swal('...')
-      .done();
-
-
-Modal Types
------------
-
-| `success`                                                                       | `error`                                                                       | `warning`                                                                       | `info`                                                                       | `question`                                                                       |
-| ------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
-| ![](https://raw.github.com/limonte/sweetalert2/master/docs/swal2-success.png) | ![](https://raw.github.com/limonte/sweetalert2/master/docs/swal2-error.png) | ![](https://raw.github.com/limonte/sweetalert2/master/docs/swal2-warning.png) | ![](https://raw.github.com/limonte/sweetalert2/master/docs/swal2-info.png) | ![](https://raw.github.com/limonte/sweetalert2/master/docs/swal2-question.png) |
-
-
-Configuration
--------------
-
-| Argument              | Default value        | Description |
-| --------------------- | -------------------- | ----------- |
-| `title`               | `null`               | The title of the modal. It can either be added to the object under the key "title" or passed as the first parameter of the function. |
-| `text`                | `null`               | A description for the modal. It can either be added to the object under the key "text" or passed as the second parameter of the function. |
-| `html`                | `null`               | A HTML description for the modal. If `text` and `html` parameters are provided in the same time, "text" will be used. |
-| `type `               | `null`               | The type of the modal. SweetAlert2 comes with [5 built-in types](#modal-types) which will show a corresponding icon animation: `warning`, `error`, `success`, `info` and `question`. It can either be put in the array under the key `type` or passed as the third parameter of the function. |
-| `input`               | `null`               | Input field type, can be `"text"`, `"email"`, `"password"`, `"number"`, `"tel"`, `"range"`, `"textarea"`, `"select"`, `"radio"`, `"checkbox"` and `"file"`. |
-| `width`               | `"500px"`            | Modal window width, including paddings (`box-sizing: border-box`). Can be in `px` or `%`. |
-| `padding`             | `20`                 | Modal window padding. |
-| `background`          | `"#fff"`             | Modal window background (CSS `background` property). |
-| `customClass`         | `null`               | A custom CSS class for the modal. |
-| `timer`               | `null`               | Auto close timer of the modal. Set in ms (milliseconds). |
-| `animation`           | `true`               | If set to `false`, modal CSS animation will be disabled. |
-| `allowOutsideClick`   | `true`               | If set to `false`, the user can't dismiss the modal by clicking outside it. |
-| `allowEscapeKey`      | `true`               | If set to `false`, the user can't dismiss the modal by pressing the Escape key. |
-| `showConfirmButton`   | `true`               | If set to `false`, a "Confirm"-button will not be shown. It can be useful when you're using `html` parameter for custom HTML description. |
-| `showCancelButton`    | `false`              | If set to `true`, a "Cancel"-button will be shown, which the user can click on to dismiss the modal. |
-| `confirmButtonText`   | `"OK"`               | Use this to change the text on the "Confirm"-button. |
-| `cancelButtonText`    | `"Cancel"`           | Use this to change the text on the "Cancel"-button. |
-| `confirmButtonColor`  | `"#3085d6"`          | Use this to change the background color of the "Confirm"-button (must be a HEX value). |
-| `cancelButtonColor`   | `"#aaa"`             | Use this to change the background color of the "Cancel"-button (must be a HEX value). |
-| `confirmButtonClass`  | `null`               | A custom CSS class for the "Confirm"-button. |
-| `cancelButtonClass`   | `null`               | A custom CSS class for the "Cancel"-button. |
-| `buttonsStyling`      | `true`               | Apply default swal2 styling to buttons. If you want to use your own classes (e.g. Bootstrap classes) set this parameter to `false`. |
-| `reverseButtons`      | `false`              | Set to `true` if you want to invert default buttons positions. |
-| `focusCancel`         | `false`              | Set to `true` if you want to focus the "Cancel"-button by default. |
-| `showCloseButton`     | `false`              | Set to `true` to show close button in top right corner of the modal. |
-| `showLoaderOnConfirm` | `false`              | Set to `true` to disable buttons and show that something is loading. Useful for AJAX requests. |
-| `preConfirm`          | `null`               | Function to execute before confirm, should return Promise, see <a href="https://limonte.github.io/sweetalert2/#ajax-request">usage example</a>. |
-| `imageUrl`            | `null`               | Add a customized icon for the modal. Should contain a string with the path or URL to the image. |
-| `imageWidth`          | `null`               | If imageUrl is set, you can specify imageWidth to describes image width in px. |
-| `imageHeight`         | `null`               | Custom image height in px. |
-| `imageClass`          | `null`               | A custom CSS class for the customized icon. |
-| `inputPlaceholder`    | `""`                 | Input field placeholder. |
-| `inputValue`          | `""`                 | Input field initial value. |
-| `inputOptions`        | `{}` or `Promise`    | If `input` parameter is set to `"select"` or `"radio"`, you can provide options. Object keys will represent options values, object values will represent options text values. |
-| `inputAutoTrim`       | `true`               | Automatically remove whitespaces from both ends of a result string. Set this parameter to `false` to disable auto-trimming. |
-| `inputValidator`      | `null`               | Validator for input field, should return Promise, see <a href="https://limonte.github.io/sweetalert2/#select-box">usage example</a>. |
-| `inputClass`          | `null`               | A custom CSS class for the input field. |
-| `onOpen`              | `null`               | Function to run when modal opens, provides modal DOM element as the first argument. |
-| `onClose`             | `null`               | Function to run when modal closes, provides modal DOM element as the first argument. |
-
-You can redefine default params by using `swal.setDefaults(customParams)` where `customParams` is an object.
-
-
-Methods
--------
-
-| Method             | Description |
-| ------------------ | ----------- |
-| `swal.isVisible()`                              | Determine if modal is shown. |
-| `swal.setDefaults({Object})`                    | If you end up using a lot of the same settings when calling SweetAlert2, you can use setDefaults at the start of your program to set them once and for all! |
-| `swal.resetDefaults()`                          | Resets settings to their default value. |
-| `swal.queue([Array] || Function)`              | Provide array of SweetAlert2 parameters to show multiple modals, one modal after another or a function that returns alert parameters given modal number. See [usage example](https://limonte.github.io/sweetalert2/#chaining-modals).  |
-| `swal.close()` or `swal.closeModal()`           | Close the currently open SweetAlert2 modal programmatically. |
-| `swal.enableButtons()`                          | Enable "Confirm" and "Cancel" buttons. |
-| `swal.disableButtons()`                         | Disable "Confirm" and "Cancel" buttons. |
-| `swal.enableConfirmButton()`                    | Enable the "Confirm"-button only. |
-| `swal.disableConfirmButton()`                   | Disable the "Confirm"-button only. |
-| `swal.enableLoading()` or `swal.showLoading()`  | Disable buttons and show loader. This is useful with AJAX requests. |
-| `swal.disableLoading()` or `swal.hideLoading()` | Enable buttons and hide loader. |
-| `swal.clickConfirm()`                           | Click the "Confirm"-button programmatically. |
-| `swal.clickCancel()`                            | Click the "Cancel"-button programmatically. |
-| `swal.showValidationError(error)`               | Show validation error message. |
-| `swal.resetValidationError()`                   | Hide validation error message. |
-| `swal.enableInput()`                            | Enable input, this method works with `input` parameter. |
-| `swal.disableInput()`                           | Disable input. |
-
-
-State Machine
--------------
-
-When a series of alerts are needed but depend on user input and/or external resources (i.e. AJAX), a state machine like function can be provided by `swal.queue(Function, [Array])`.
-The supplied function will be called upon for each modal and will receive a control hash as a parameter with the attributes/methods shown below. The supplied function must return a hash of swal parameters to build the current alert.
-The array parameter is the initial set of states to start the alert chain. See [usage example](https://limonte.github.io/sweetalert2/#state-machine).
-
-|Member                        | Type       | Description                                                                                                                          |
-|------------------------------|------------|--------------------------------------------------------------------------------------------------------------------------------------|
-| `current`                    | `object`   | Represents the state for the current alert.                                                                                          |
-| `next`                       | `object`   | Represents the next state that will follow the current if not altered. Null would indicated that this is the last alert in the chain.|
-| `fork(Array[object])`        | `function` | Replaces all remaining state objects in chain with the state array passed as a parameter.                                            |
-| `repeatCurrent()`            | `function` | Duplicates current alert state and inserts it next in state array                                                                    |
-| `insert(object)`             | `function` | Inserts new state to directly follow current.                                                                                        |
-| `terminate()`                | `function` | Removes all states that were queued to follow current.                                                                               |
+## [Go here to see the docs and more examples ↗](https://sweetalert2.github.io/)
 
 
 Browser compatibility
 ---------------------
 
-SweetAlert2 works in most major browsers (yes, even IE). Some details:
+ IE11* | Edge | Chrome | Firefox | Safari | Opera | Android Browser* | UC Browser*
+-------|------|--------|---------|--------|-------|------------------|------------
+:heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: |
 
-- **IE: 10+**, Promise polyfill should be included (see [usage example](#usage)).
-- **Microsoft Edge: 12+**
-- **Safari: 4+**
-- **Firefox: 4+**
-- **Chrome 14+**
-- **Opera: 15+**
+\* ES6 Promise polyfill should be included, see [usage example](#usage).
 
-Note that SweetAlert2 **does not** and **will not** provide support or functionality of any kind on IE9 and lower.
+Note that SweetAlert2 **does not** and **will not** provide support or functionality of any kind on IE10 and lower.
+
+
+Related projects
+-------------------------
+
+- [ngx-sweetalert2](https://github.com/sweetalert2/ngx-sweetalert2) - Angular 4+ integration
+- [sweetalert2-react-content](https://github.com/sweetalert2/sweetalert2-react-content) - React integration
+- [sweetalert2-webpack-demo](https://github.com/sweetalert2/sweetalert2-webpack-demo) - webpack demo
+- [sweetalert2-parcel-demo](https://github.com/sweetalert2/sweetalert2-parcel-demo) - overriding SCSS variables demo
+
+
+Related community projects
+-------------------------
+
+- [avil13/vue-sweetalert2](https://github.com/avil13/vue-sweetalert2) - Vue.js wrapper
+- [softon/sweetalert](https://github.com/softon/sweetalert) - Laravel 5 Package
+
+
+Collaborators
+-------------
+
+[![](https://avatars3.githubusercontent.com/u/3198597?v=4&s=80)](https://github.com/zenflow) | [![](https://avatars1.githubusercontent.com/u/1343250?v=4&s=80)](https://github.com/toverux) | [![](https://avatars3.githubusercontent.com/u/9093699?v=4&s=80)](https://github.com/acupajoe) | [![](https://avatars1.githubusercontent.com/u/5918348?v=4&s=80)](https://github.com/samturrell) | [![](https://avatars2.githubusercontent.com/u/4542461?v=4&s=80)](https://github.com/birjolaxew)
+-|-|-|-|-
+[@zenflow](https://github.com/zenflow) | [@toverux](https://github.com/toverux) | [@acupajoe](https://github.com/acupajoe) | [@samturrell](https://github.com/samturrell) | [@birjolaxew](https://github.com/birjolaxew)
+
+
+Contributors
+------------
+
+This project exists thanks to all the people who contribute.
+<a href="https://github.com/sweetalert2/sweetalert2/graphs/contributors"><img src="https://opencollective.com/SweetAlert2/contributors.svg?width=890&button=false" /></a>
 
 
 Contributing
@@ -229,12 +185,26 @@ Contributing
 
 If you would like to contribute enhancements or fixes, please do the following:
 
-1. Fork the plugin repository.
+1. Fork the `sweetalert2` repository and clone it locally.
 
-1. Make sure you have [Node](http://nodejs.org/) and [NPM](https://www.npmjs.com/) installed.
+2. Make sure you have [npm](https://www.npmjs.com/) or [yarn](https://yarnpkg.com/) installed.
 
-1. When in the SweetAlert2 directory, run the command ``npm install`` to install npm packages.
+3. When in the SweetAlert2 directory, run `npm install` or `yarn install` to install dependencies.
 
-1. Start gulp watcher ``gulp watch`` to automatically build and minify the SCSS and JS-files.
+4. To begin active development, run `npm start` or `yarn start`. This does several things for you:
+ - Lints your code
+ - Builds the `dist` folder
+ - Serves sandbox.html @ http://localhost:8080/ (browser-sync ui:  http://localhost:8081/)
+ - Serves unit tests @ http://localhost:3000
+ - Re-lints, re-builds, re-loads and re-tests as necessary when files change
 
-1. Make sure that `dist/*` files aren't committed and create a pull request.
+Donations
+---------
+
+Has SweetAlert2 helped you create an amazing application? You can show your support by making a donation in one of several ways:
+
+- [Donate via PayPal](https://www.paypal.me/limonte/5eur)
+- [Donate via Patreon](https://www.patreon.com/limonte)
+
+
+### [Hall of Donators :trophy:](DONATIONS.md)

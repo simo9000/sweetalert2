@@ -1,36 +1,79 @@
-export var swalPrefix = 'swal2-';
+export const swalPrefix = 'swal2-'
 
-export var prefix = function(items) {
-  var result = {};
-  for (var i in items) {
-    result[items[i]] = swalPrefix + items[i];
+export const prefix = (items) => {
+  const result = {}
+  for (const i in items) {
+    result[items[i]] = swalPrefix + items[i]
   }
-  return result;
-};
+  return result
+}
 
-export var swalClasses = prefix([
+export const swalClasses = prefix([
   'container',
+  'shown',
+  'height-auto',
+  'iosfix',
+  'popup',
   'modal',
-  'overlay',
+  'no-backdrop',
+  'toast',
+  'toast-shown',
+  'toast-column',
+  'fade',
+  'show',
+  'hide',
+  'noanimation',
   'close',
+  'title',
+  'header',
   'content',
-  'spacer',
+  'actions',
   'confirm',
   'cancel',
+  'footer',
   'icon',
+  'icon-text',
   'image',
   'input',
+  'file',
+  'range',
   'select',
   'radio',
   'checkbox',
+  'label',
   'textarea',
-  'validationerror'
-]);
+  'inputerror',
+  'validationerror',
+  'progresssteps',
+  'activeprogressstep',
+  'progresscircle',
+  'progressline',
+  'loading',
+  'styled',
+  'top',
+  'top-start',
+  'top-end',
+  'top-left',
+  'top-right',
+  'center',
+  'center-start',
+  'center-end',
+  'center-left',
+  'center-right',
+  'bottom',
+  'bottom-start',
+  'bottom-end',
+  'bottom-left',
+  'bottom-right',
+  'grow-row',
+  'grow-column',
+  'grow-fullscreen'
+])
 
-export var iconTypes = prefix([
+export const iconTypes = prefix([
   'success',
   'warning',
   'info',
   'question',
   'error'
-]);
+])
